@@ -1,0 +1,37 @@
+﻿using Refit;
+using HSPI_SensiboClimate.Plugin.API.JSON;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace HSPI_SensiboClimate.Plugin.API
+{
+    public interface ISensiboAPI
+    {
+        [Get("/api/v2/users/me/pods")]
+        Task<APIGetAllModel> GetAllDevices([AliasAs("fields")] string fields = "*", [AliasAs("apiKey")] string apiKey = "TOKEN IS EMBEDDED");
+
+        [Get("/api/v2/pods/{deviceId}/smartmode")]
+        Task<SmartModeModel> GetSmartModeState(string deviceId, [AliasAs("apiKey")] string apiKey = "TOKEN IS EMBEDDED");
+
+        [Get("/api/v1/pods/{deviceId}/schedules")]
+        Task<ScheduledStateModel> GetScheduledState(string deviceId, [AliasAs("apiKey")] string apiKey = "TOKEN IS EMBEDDED");
+
+        [Post("/api/v2/pods/{deviceId}/acStates")]
+<<<<<<< Updated upstream
+		Task<StatusRequestModel> SendACState(string deviceId, [Body(BodySerializationMethod.Json)] ACStateUpdate state, [AliasAs("apiKey")] string apiKey = "TOKEN IS EMBEDDED");
+
+       
+    }
+=======
+        Task<StatusRequestModel> SendACStateAsync(string deviceId, [Body(BodySerializationMethod.Json)] ACStateUpdate state, [AliasAs("apiKey")] string apiKey = "TOKEN IS EMBEDDED");
+
+
+		[Patch("api/v2/pods/{deviceId}/acStates/{stateName}")]
+		Task<StatusRequestModel> SendAcSingleStateAsync(string deviceId,string stateName, [Body(BodySerializationMethod.Json)] AcSingleStateUpdate state, [AliasAs("apiKey")] string apiKey = "TOKEN IS EMBEDDED");
+
+	}
+>>>>>>> Stashed changes
+}

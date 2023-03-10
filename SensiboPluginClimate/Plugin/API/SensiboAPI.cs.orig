@@ -1,0 +1,273 @@
+<<<<<<< Updated upstream
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Refit;
+using HSPI_SensiboClimate.Plugin.API.JSON;
+using HSPI_SensiboClimate.Plugin.Helpers;
+using HomeSeerAPI;
+
+namespace HSPI_SensiboClimate.Plugin.API
+{
+    public class SensiboAPI : ISensiboAPI
+    {
+	    private readonly IIniSettings _iniSettings;
+	    private readonly ILogging _log;
+	    private static ISensiboAPI sensiboAPI = RestService.For<ISensiboAPI>("https://home.sensibo.com");
+        private IHSApplication HS { get => HSPI.HSApp; }
+
+        public SensiboAPI(IIniSettings iniSettings, ILogging log)
+        {
+	        _iniSettings = iniSettings;
+	        _log = log;
+        }
+
+        public async Task<APIGetAllModel> GetAllDevices([AliasAs("fields")] string fields, [AliasAs("apiKey")] string apiKey)
+        {
+            apiKey = _iniSettings.ApiKey;
+            if(string.IsNullOrWhiteSpace(apiKey))
+            {
+                _log.LogWarning("Enter a API-Key");
+                return null;
+            }
+
+            try
+            {
+	            _log.LogDebug($"SensiboAPI-GetAllDevices: Trying to fetch data for device. Fields: {fields}");
+				var devicesInfo = await sensiboAPI.GetAllDevices(fields, apiKey);
+				_log.LogDebug($"Response: Status={devicesInfo.Status}, numberOfDevices={devicesInfo.ACInfoList?.Count ?? 0}");
+                return devicesInfo;
+            }
+            catch (ApiException exception)
+            {
+                _log.LogError(exception.Message);
+                _log.LogError(exception.Content);
+                return null;
+            }
+        }
+
+        public async Task<ScheduledStateModel> GetScheduledState(string deviceId, [AliasAs("apiKey")] string apiKey = "TOKEN IS EMBEDDED")
+        {
+            apiKey = _iniSettings.ApiKey;
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+	            _log.Log("Enter a API-Key", Enums.LogType.Warning);
+                return null;
+            }
+
+            try
+            {
+	            _log.LogDebug($"SensiboAPI-GetScheduleState: Trying to fetch data for device {deviceId}");
+                var scheduledStateInfo = await sensiboAPI.GetScheduledState(deviceId, apiKey);
+                _log.LogDebug($"Response: Status={scheduledStateInfo.Status},numberOfSchedules={(scheduledStateInfo.Result?.Count ?? 0)}");
+
+				return scheduledStateInfo;
+            }
+            catch (ApiException exception)
+            {
+                _log.Log(exception.Message, Enums.LogType.Error);
+                _log.Log(exception.Content, Enums.LogType.Error);
+                return null;
+            }
+        }
+
+        public async Task<SmartModeModel> GetSmartModeState(string deviceId, [AliasAs("apiKey")] string apiKey = "TOKEN IS EMBEDDED")
+        {
+            apiKey = _iniSettings.ApiKey;
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+	            _log.Log("Enter a API-Key", Enums.LogType.Warning);
+                return null;
+            }
+
+            try
+            {
+	            _log.LogDebug($"SensiboAPI-GetSmartModeState: Trying to fetch data for device {deviceId}");
+				var smartStateInfo = await sensiboAPI.GetSmartModeState(deviceId, apiKey);
+				_log.LogDebug($"Response: Status={smartStateInfo.Status},smartMode={smartStateInfo.Result.On}");
+
+				return smartStateInfo;
+            }
+            catch (ApiException exception)
+            {
+                _log.Log(exception.Message, Enums.LogType.Error);
+				_log.Log(exception.Content, Enums.LogType.Error);
+                return null;
+            }
+        }
+
+		public async Task<StatusRequestModel> SendACState(string deviceId, [Body(BodySerializationMethod.Json)] ACStateUpdate state, [AliasAs("apiKey")] string apiKey)
+        {
+            apiKey = _iniSettings.ApiKey;
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+	            _log.Log("Enter a API-Key", Enums.LogType.Warning);
+                return null;
+            }
+
+            try
+            {
+	            _log.LogDebug($"SensiboAPI-SendACState: Trying to send ac data for device {deviceId} {state.ToString()}");
+				var status = await sensiboAPI.SendACState(deviceId, state, apiKey);
+				_log.LogDebug($"Response: Status={status.Status},smartMode={status.Result.AcState.ToString()}");
+				return status;
+            }
+            catch (ApiException exception)
+            {
+	            _log.Log(exception.Message, Enums.LogType.Error);
+	            _log.Log(exception.Content, Enums.LogType.Error);
+                var failedStatus = new StatusRequestModel()
+                {
+                    Status = "Failed",
+                    Result = null
+                };
+
+                return failedStatus;
+            }
+        }
+    }
+}
+=======
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Refit;
+using HSPI_SensiboClimate.Plugin.API.JSON;
+using HSPI_SensiboClimate.Plugin.Helpers;
+using HomeSeerAPI;
+
+namespace HSPI_SensiboClimate.Plugin.API
+{
+    public class SensiboAPI : ISensiboAPI
+    {
+        private static ISensiboAPI sensiboAPI = RestService.For<ISensiboAPI>("https://home.sensibo.com");
+        private IHSApplication HS { get => HSPI.HSApp; }
+
+        public async Task<APIGetAllModel> GetAllDevicesAsync([AliasAs("fields")] string fields, [AliasAs("apiKey")] string apiKey)
+        {
+            apiKey = Storage.APIKey;
+            if(string.IsNullOrWhiteSpace(apiKey))
+            {
+                Utils.Log("Enter a API-Key", Enums.LogType.Warning);
+                return null;
+            }
+
+            try
+            {
+                var devicesInfo = await sensiboAPI.GetAllDevicesAsync(fields, apiKey);
+                return devicesInfo;
+            }
+            catch (ApiException exception)
+            {
+                Utils.Log(exception.Message, Enums.LogType.Error);
+                Utils.Log(exception.Content, Enums.LogType.Error);
+                return null;
+            }
+        }
+
+        public async Task<ScheduledStateModel> GetScheduledStateAsync(string deviceId, [AliasAs("apiKey")] string apiKey = "TOKEN IS EMBEDDED")
+        {
+            apiKey = Storage.APIKey;
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                Utils.Log("Enter a API-Key", Enums.LogType.Warning);
+                return null;
+            }
+
+            try
+            {
+                var schedukedStateInfo = await sensiboAPI.GetScheduledStateAsync(deviceId, apiKey);
+                return schedukedStateInfo;
+            }
+            catch (ApiException exception)
+            {
+                Utils.Log(exception.Message, Enums.LogType.Error);
+                Utils.Log(exception.Content, Enums.LogType.Error);
+                return null;
+            }
+        }
+
+        public async Task<SmartModeModel> GetSmartModeStateAsync(string deviceId, [AliasAs("apiKey")] string apiKey = "TOKEN IS EMBEDDED")
+        {
+            apiKey = Storage.APIKey;
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                Utils.Log("Enter a API-Key", Enums.LogType.Warning);
+                return null;
+            }
+
+            try
+            {
+                var smartStateInfo = await sensiboAPI.GetSmartModeStateAsync(deviceId, apiKey);
+                return smartStateInfo;
+            }
+            catch (ApiException exception)
+            {
+                Utils.Log(exception.Message, Enums.LogType.Error);
+                Utils.Log(exception.Content, Enums.LogType.Error);
+                return null;
+            }
+        }
+
+        public async Task<StatusRequestModel> SendACStateAsync(string deviceId, [Body(BodySerializationMethod.Json)] ACStateUpdate state, [AliasAs("apiKey")] string apiKey)
+        {
+            apiKey = Storage.APIKey;
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                Utils.Log("Enter a API-Key", Enums.LogType.Warning);
+                return null;
+            }
+
+            try
+            {
+                StatusRequestModel status = await sensiboAPI.SendACStateAsync(deviceId, state, apiKey);
+                return status;
+            }
+            catch (ApiException exception)
+            {
+                Utils.Log(exception.Message, Enums.LogType.Error);
+                Utils.Log(exception.Content, Enums.LogType.Error);
+                var failedStatus = new StatusRequestModel()
+                {
+                    Status = "Failed",
+                    Result = null
+                };
+
+                return failedStatus;
+            }
+        }
+
+        public async Task<StatusRequestModel> SendAcSingleStateAsync(string deviceId,string stateName, [Body(BodySerializationMethod.Json)] AcSingleStateUpdate state, [AliasAs("apiKey")] string apiKey)
+        {
+	        apiKey = Storage.APIKey;
+	        if (string.IsNullOrWhiteSpace(apiKey))
+	        {
+		        Utils.Log("Enter a API-Key", Enums.LogType.Warning);
+		        return null;
+	        }
+
+	        try
+	        {
+		        StatusRequestModel status = await sensiboAPI.SendAcSingleStateAsync(deviceId, stateName,state, apiKey);
+		        return status;
+	        }
+	        catch (ApiException exception)
+	        {
+		        Utils.Log(exception.Message, Enums.LogType.Error);
+		        Utils.Log(exception.Content, Enums.LogType.Error);
+		        var failedStatus = new StatusRequestModel()
+		        {
+			        Status = "Failed",
+			        Result = null
+		        };
+
+		        return failedStatus;
+	        }
+        }
+	}
+}
+>>>>>>> Stashed changes
